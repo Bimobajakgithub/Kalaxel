@@ -1,0 +1,14 @@
+/backend/node_modules/
+/frontend/node_modules/
+
+/backend/.env.dev
+/frontend/.env.dev
+/backend/.env
+/frontend/.env
+/.claude
+/frontend/vite.config.js
+
+/docs
+
+/CLAUDE.md
+/docker-compose.yml

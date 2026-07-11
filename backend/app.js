@@ -1,0 +1,118 @@
+import express from "express";
+import cors from "cors";
+import client from "prom-client";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+
+import auths from "./routes/auths.js";
+import users from "./routes/users.js";
+import conceptArts from "./routes/concept-arts.js";
+import artMedia from "./routes/art-media.js";
+import likes from "./routes/likes.js";
+import comments from "./routes/comments.js";
+import conversation from "./routes/conversations.js";
+import messages from "./routes/messages.js";
+import jobPostings from "./routes/job-postings.js";
+import jobApplications from "./routes/job-applications.js";
+import subscriptions from "./routes/subscriptions.js";
+import devlog from "./routes/devlog.js";
+import devlogMedia from "./routes/devlog-media.js";
+import forum from "./routes/forum.js";
+import contentReports from "./routes/content-reports.js";
+import moderation from "./routes/moderation.js";
+import moderationActions from "./routes/moderation-actions.js";
+import script  from "./routes/script.js";
+import scriptmedia from "./routes/script-media.js";
+import tutorial from "./routes/tutorial.js";
+import tutorialmedia from "./routes/tutorial-media.js"
+
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
+
+const httpRequestCounter = new client.Counter({
+  name: "http_requests_total",
+  help: "Total number of HTTP requests",
+  labelNames: ["method", "route", "status"],
+});
+
+app.use((req, res, next) => {
+  console.log("MASUK:", req.method, req.url);
+  next();
+});
+
+app.use((req, res, next) => {
+  res.on("finish", () => {
+    httpRequestCounter.inc({
+      method: req.method,
+      route: req.route?.path || req.path,
+      status: res.statusCode,
+    });
+  });
+  next();
+});
+
+app.get("/metrics", async (req, res) => {
+  try {
+    res.set("Content-Type", client.register.contentType);
+    res.end(await client.register.metrics());
+  } catch (ex) {
+    res.status(500).end(ex);
+  }
+});
+
+const allowedOrigins = [
+  // Localhost patterns
+  /^http:\/\/localhost(:\d+)?$/, // http://localhost, http://localhost:5173, http://localhost:5000
+  /^http:\/\/127\.0\.0\.1(:\d+)?$/, // http://127.0.0.1, http://127.0.0.1:5173
+
+  // Nginx (port 80)
+  "http://localhost",
+  "http://127.0.0.1",
+
+  // ngrok tunnels
+  /^https:\/\/.*\.ngrok-free\.app$/,
+
+  // If you access via network IP
+  /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/,
+];
+
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    exposedHeaders: ["Content-Disposition"],
+  }),
+);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/assets", express.static(path.join(__dirname, "assets")));
+
+app.use("/api", auths);
+app.use("/api/users", users);
+app.use("/api/concept-arts", conceptArts);
+app.use("/api/art-media", artMedia);
+app.use("/api/likes", likes);
+app.use("/api/comments", comments);
+app.use("/api/conversations", conversation);
+app.use("/api/messages", messages);
+app.use("/api/script", script);
+app.use("/api/script-media", scriptmedia);
+app.use("/api/tutorial", tutorial);
+app.use("/api/tutorial-media", tutorialmedia);
+app.use("/api/job-postings", jobPostings);
+app.use("/api/job-applications", jobApplications);
+app.use("/api/subscriptions", subscriptions);
+app.use("/api/devlog", devlog);
+app.use("/api/devlog-media", devlogMedia);
+app.use("/api/forum", forum);
+app.use("/api/reports", contentReports);
+app.use("/api/moderation", moderation);
+app.use("/api/moderation-actions", moderationActions);
+
+export default app;
