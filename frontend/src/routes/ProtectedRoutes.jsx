@@ -10,7 +10,10 @@ const ProtectedRoute = ({ children, requiredRole }) => {
 
   if (requiredRole) {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (user.role !== requiredRole) return <Navigate to="/" replace />;
+    if (user.role !== requiredRole){
+      alert("role anda tidak sesuai");
+      return <Navigate to="/" replace />;
+    } 
   }
 
   return children;
